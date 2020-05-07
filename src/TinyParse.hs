@@ -65,7 +65,7 @@ string :: String -> Parser String
 string = sequenceA . map char
 
 sepBy :: Parser a -> Parser b -> Parser [b]
-sepBy sep p  = (sep `sepBy1` p) <|> pure []
+sepBy sep p  = (sep `sepBy1` p) <|> return []
 
 sepBy1 :: Parser a -> Parser b -> Parser [b]
 sepBy1 sep p = (:) <$> p <*> many (sep *> p)
@@ -92,7 +92,7 @@ number :: Parser Double
 number = read <$> (negParse <|> decParse <|> intParse)
          where
                 digit = satisfy isDigit 
-                intParse = many digit
+                intParse = some digit
                 decParse = combine <$>  intParse <*> char '.' <*> intParse
                 negParse = (:) <$> char '-' <*> (decParse <|> intParse)
                 

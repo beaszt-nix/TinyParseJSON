@@ -4,9 +4,10 @@ module JSON (
 
 import TinyParse
 import qualified Data.Map.Strict as Map
-import System.IO(readFile)
+import System.IO
 import Data.Maybe(fromMaybe)
 import Data.Text.Prettyprint.Doc
+import Data.Text.Prettyprint.Doc.Render.Text
 
 -- Pretty Printing Instance for Map
 instance (Pretty k, Pretty v, Ord k) => Pretty (Map.Map k v) where
@@ -14,10 +15,12 @@ instance (Pretty k, Pretty v, Ord k) => Pretty (Map.Map k v) where
                 where
                    t        = Map.toList a
                    f (k,v)  = 
-                        indent 2 $ ((fillBreak 10 $ pretty k) 
+                        indent 2 $ ((fillBreak 10 $ 
+                                 (pretty '\"'<> pretty k <> pretty '\"')) 
                              <+> hsep [pretty ':', pretty v , pretty ','])
                    f' (k,v)  = 
-                        indent 2 $ ((fillBreak 10 $ pretty k) 
+                        indent 2 $ ((fillBreak 10 $ 
+                                (pretty '\"'<> pretty k <> pretty '\"')) 
                              <+> hsep [pretty ':', pretty v])
                    list f t = let n = init t
                                   l = last t in (map f n) ++ [f' l]
@@ -28,7 +31,7 @@ instance Pretty JsonVal where
         pretty (JsonBool a)    = pretty $ if a then "true" else "false"
         pretty (JsonStr a)     = pretty '\"' <> pretty a <> pretty '\"'
         pretty (JsonNum a)     = pretty a
-        pretty (JsonObj m)     = pretty m
+        pretty (JsonObj m)     = if Map.empty == m then pretty "{}" else pretty m
         pretty (JsonArr a)     = prettyList a 
 
 data JsonVal = JsonNull 
@@ -44,7 +47,7 @@ jsonNull = JsonNull <$ string "null"
 
 jsonBool :: Parser JsonVal 
 jsonBool = true <|> false
-           where
+           where  
                    true  = JsonBool True  <$ string "true"
                    false = JsonBool False <$ string "false"
 
@@ -52,7 +55,7 @@ jsonStr :: Parser JsonVal
 jsonStr =  JsonStr <$> (char '"' *> stringLiteral <* char '"')
 
 jsonNum :: Parser JsonVal
-jsonNum = JsonNum <$> number
+jsonNum = (JsonNum ) <$> number
 
 jsonArr :: Parser JsonVal
 jsonArr = JsonArr <$> (char '[' *> sepBy com element <* char ']')
@@ -88,5 +91,16 @@ loadJsonFromFile :: String -> (IO JsonVal)
 loadJsonFromFile inp = do
                   str <- readFile inp
                   let 
-                    (tok,_) = fromMaybe (JsonNull, "") (parse jsonVal str)
+                    (tok,_) = fromMaybe ((JsonNull, "")) (parse jsonVal str)
                   return tok
+
+writeJsonToFile :: FilePath -> JsonVal -> IO ()
+writeJsonToFile path json = do
+                    writeFile path ""
+                    handle <- openFile path WriteMode
+                    renderIO handle (f json)
+                    hClose handle
+                    where
+                      f input= unAnnotateS $ layoutSmart 
+                                        (LayoutOptions (AvailablePerLine 60 1)) 
+                                                    (pretty input) 
