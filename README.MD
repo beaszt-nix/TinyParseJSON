@@ -26,17 +26,16 @@ The available useful functions are
 ```parsePrintFile :: String -> (IO (Doc ann)``` which prints out the formatted contents of a json file after first read and building an internal representation of them. (No practical use except in ghci, to check structure of json file while writing functions for it).
 
 ```loadJsonFromFile :: String -> (IO JsonVal)``` which returns JSON Object in the form of a Dictionary using Data.Map
-The json can now be worked with and treated as a dictionary. (This is also usable in ghci, to play around with the object
-and figure out how to write programs for them)
+The json can now be worked with and treated as a dictionary. (This is also usable in ghci, to play around with the object and figure out how to write programs for them)
 
-Remaining functions are all individual parsers for Numbers, Strings, Arrays, Booleans, Objects and null values
-In order to print.
+```writeJsonToFile :: FilePath -> JsonVal -> IO ()``` which writes JSON Object out to file by taking path as argument. 
 
-Included are prettyparser instances for Map as well JsonValue to print them out in a easily readable manner.
-Function to write out to json not yet implemented.
+```getJsonVal :: String -> JsonVal``` which takes string as input parses and returns a JSON value (Non IO).
+
+```pretty :: JsonVal -> Doc ann``` which provides well structured, and readable output to Json Values in REPL and can subsequently be used with ```print```. This is an instance of the Pretty typeclass for JsonVal, therefore introduces the external dependency "prettyprinter".
 
 **This is NOT a complete implementation of JSON.**
-Empty Arrays, and Empty Objects are not supported, and no attention was paid to unicode in the slightest.
+No attention was paid to unicode in the slightest, and certain other features were omitted.
 
 ## Installation
 ```

@@ -1,5 +1,6 @@
 module JSON (
-        module JSON
+        module JSON,
+        pretty
             ) where
 
 import TinyParse
@@ -91,8 +92,11 @@ loadJsonFromFile :: String -> (IO JsonVal)
 loadJsonFromFile inp = do
                   str <- readFile inp
                   let 
-                    (tok,_) = fromMaybe ((JsonNull, "")) (parse jsonVal str)
+                    tok = getJsonVal str
                   return tok
+
+getJsonVal  :: String -> JsonVal
+getJsonVal json = fst $ fromMaybe (JsonNull, "") $ parse jsonVal json
 
 writeJsonToFile :: FilePath -> JsonVal -> IO ()
 writeJsonToFile path json = do
